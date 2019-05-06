@@ -26,7 +26,6 @@ def make_selection(n):
     return (x, y)
 
 
-#distribution law for my function
 def make_theoretical_func():
     x_local = np.arange(2 / 7 - 0.1, 2.0 + 0.1, 0.1)
     y_local = 7 / 6 - 1 / (3 * x_local)
@@ -35,15 +34,19 @@ def make_theoretical_func():
 
 
 def make_empirical_func(t, y):
+    n = len(y)
     tmp = 0
+    y = list(set(y))
+    y.sort()
+    # print(y)
     x_cur = [y[0] - abs(y[0]), y[0]]
     y_cur = [0, 0]
-    tmp += t[y[0]] / len(y)
+    tmp += t[y[0]] / n
     plt.plot(x_cur, y_cur, marker='o')
     for i in range(1, len(y)):
         x_cur = [y[i - 1], y[i]]
         y_cur = [tmp, tmp]
-        tmp += t[y[i]] / len(y)
+        tmp += t[y[i]] / n
         plt.plot(x_cur, y_cur, marker='o')
     x_cur = [y[len(y) - 1], y[len(y) - 1] * 2]
     y_cur = [1, 1]
@@ -66,6 +69,7 @@ def main():
             t[y[i]] += 1
             continue
         t[y[i]] = 1
+    print(t)
     print("Вариационный ряд:")
     print(y)
     make_empirical_func(t, y)
