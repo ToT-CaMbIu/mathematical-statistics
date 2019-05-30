@@ -7,7 +7,7 @@ import math as mth
 import sympy as sp
 import random as rnd
 import matplotlib.pyplot as plt
-import matplotlib
+from scipy import stats as sc
 import decimal
 
 a = -1
@@ -44,27 +44,19 @@ def HelperM(y, d, m, flg_d, flg_m, size):
     else:
         d_t = d
     mas = []
-    if not flg_d and size == 20:
-        iter = [3.1737, 2.8609, 2.4334]
-    elif not flg_d and size == 30:
-        iter = [3.038, 2.7563, 2.3638]
-    elif not flg_d and size == 40:
-        iter = [2.975, 2.7563, 2.3312]
+    alphas = [0.99, 0.98, 0.95, 0.9]
+    if not flg_d:
+        for a in alphas:
+            t = sc.t.isf((1 - a) / 2, len(y) - 1)
+            l = m_t - (np.sqrt(d_t) / np.sqrt(len(y))) * t
+            r = m_t + (np.sqrt(d_t) / np.sqrt(len(y))) * t
+            mas.append((l, r, a))
     else:
-        iter = [2.636, 2.326, 1.960]
-    print("M:")
-    print(m_t)
-    print("D:")
-    print(d_t)
-    lmt = m_t - (np.sqrt(d_t) / np.sqrt(len(y))) * iter[0]
-    rmt = m_t + (np.sqrt(d_t) / np.sqrt(len(y))) * iter[0]
-    mas.append((lmt, rmt, 0.99))
-    lmt = m_t - (np.sqrt(d_t) / np.sqrt(len(y))) * iter[1]
-    rmt = m_t + (np.sqrt(d_t) / np.sqrt(len(y))) * iter[1]
-    mas.append((lmt, rmt, 0.98))
-    lmt = m_t - (np.sqrt(d_t) / np.sqrt(len(y))) * iter[2]
-    rmt = m_t + (np.sqrt(d_t) / np.sqrt(len(y))) * iter[2]
-    mas.append((lmt, rmt, 0.95))
+        for a in alphas:
+            t = sc.norm.isf((1 - a) / 2)
+            l = m_t - (np.sqrt(d_t) / np.sqrt(len(y))) * t
+            r = m_t + (np.sqrt(d_t) / np.sqrt(len(y))) * t
+            mas.append((l, r, a))
     return mas
 
 
@@ -87,33 +79,17 @@ def D(y, m, flg_m, size):
         sum = 0
         for i in y:
             sum += (i - m_t) ** 2
-        if size == 20:
-            iterl, iterr = [39.99685, 37.56623, 34.16961], [7.43384, 8.26040, 9.59078]
-        if size == 25:
-            iterl, iterr = [46.92789, 44.31410, 40.64647], [10.51965, 11.52398, 13.11972]
-        if size == 30:
-            iterl, iterr = [53.67196, 50.89218, 46.97924], [13.78672, 14.95346, 16.79077]
+        alphas = [0.99, 0.98, 0.95, 0.9]
         mas = []
-        lmt = sum / iterl[0]
-        rmt = sum / iterr[0]
-        mas.append((lmt, rmt, 0.99))
-        lmt = sum / iterl[1]
-        rmt = sum / iterr[1]
-        mas.append((lmt, rmt, 0.98))
-        lmt = sum / iterl[2]
-        rmt = sum / iterr[2]
-        mas.append((lmt, rmt, 0.95))
-        for i in range(2):
-            plt.plot([(mas[i][1] - mas[i][0]), (mas[i + 1][1] - mas[i + 1][0])], [mas[i][2], mas[i + 1][2]], marker='o',
+        for a in alphas:
+            l = sum / sc.chi2.isf((1 - a) / 2, len(y))
+            r = sum / sc.chi2.isf((1 + a) / 2, len(y))
+            mas.append((l, r, a))
+        for i in range(len(mas) - 1):
+            plt.plot([abs(mas[i][1] - mas[i][0]), abs(mas[i + 1][1] - mas[i + 1][0])], [mas[i][2], mas[i + 1][2]],
+                     marker='o',
                      color='red')
     else:
-        mas = []
-        if size == 20:
-            iterl, iterr = [38.58226, 36.19087, 32.85233], [6.84397, 7.63273, 8.90652]
-        if size == 25:
-            iterl, iterr = [45.55851, 42.97982, 39.36408], [9.88623, 10.85636, 12.40115]
-        if size == 30:
-            iterl, iterr = [52.33562, 49.58788, 45.72229], [13.12115, 14.25645, 16.04707]
         m_t = 0
         for i in y:
             m_t += i
@@ -123,23 +99,21 @@ def D(y, m, flg_m, size):
             d_t += (i - m_t) ** 2
         d_t *= 1 / (len(y) - 1)
         const = ((len(y) - 1) * d_t)
-        lmt = const / iterl[0]
-        rmt = const / iterr[0]
-        mas.append((lmt, rmt, 0.99))
-        lmt = const / iterl[1]
-        rmt = const / iterr[1]
-        mas.append((lmt, rmt, 0.98))
-        lmt = const / iterl[2]
-        rmt = const / iterr[2]
-        mas.append((lmt, rmt, 0.95))
-        for i in range(2):
-            plt.plot([(mas[i][1] - mas[i][0]), (mas[i + 1][1] - mas[i + 1][0])], [mas[i][2], mas[i + 1][2]], marker='o',
+        alphas = [0.99, 0.98, 0.95, 0.9]
+        mas = []
+        for a in alphas:
+            l = const / sc.chi2.isf((1 - a) / 2, len(y) - 1)
+            r = const / sc.chi2.isf((1 + a) / 2, len(y) - 1)
+            mas.append((l, r, a))
+        for i in range(len(mas) - 1):
+            plt.plot([abs(mas[i][1] - mas[i][0]), abs(mas[i + 1][1] - mas[i + 1][0])], [mas[i][2], mas[i + 1][2]],
+                     marker='o',
                      color='black')
     return mas
 
 
 def main():
-    iter = [20, 30, 40]
+    iter = [30, 50, 70, 100, 150]
     final = []
     for i in iter:
         n = i
@@ -153,7 +127,7 @@ def main():
     for i in range(len(final) - 1):
         plt.plot([final[i][0], final[i + 1][0]], [final[i][1], final[i + 1][1]], marker='o', color='black')
     plt.show()
-    iter = [20, 25, 30]
+    iter = [30, 50, 70, 100, 150]
     final = []
     for i in iter:
         n = i
@@ -163,12 +137,12 @@ def main():
         print(y)
         mas = D(y, 0.6486, True, i)
         D(y, 0, False, i)
-        tmp = (mas[1][1] - mas[1][0], i)
+        tmp = (abs(mas[1][1] - mas[1][0]), i)
         final.append(tmp)
         plt.show()
-    #for i in range(len(final) - 1):
-        #plt.plot([final[i][0], final[i + 1][0]], [final[i][1], final[i + 1][1]], marker='o', color='black')
-    #plt.show()
+    for i in range(len(final) - 1):
+        plt.plot([final[i][0], final[i + 1][0]], [final[i][1], final[i + 1][1]], marker='o', color='black')
+    plt.show()
 
 
 if __name__ == '__main__':
